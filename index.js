@@ -19,18 +19,33 @@ app.get("/", function (req,res) {
 
 //create - creates an article from post data
 app.post('/',function (req,res){
-var id = hashids.encode(req.body.userUrl);
+// var id = hashids.encode(req.body.userUrl);
 
-  db.link.create({ url: req.body.userUrl, hash: id}).then(function(taco) {
-    console.log("created data",taco.get());
-  // res.render('links', {url:taco.url});
+  var bigUrl = req.body.userUrl;
+  var newHash;
+  db.link.create({ url: bigUrl}).then(function(url) {
+   newHash = hashids.encode(url.id);
+  }).then(function(url) {
+    db.link.find({where: {url: bigUrl}}).then(function(url) {
+      url.hash= newHash;
+      url.save().then(function(url) {
+        var hashObject = {hash: req.headers.host +"/" + url.hash};
+        res.render('links', hashObject);
+      });
+    });
   });
 });
 
 
-app.get("/links/:id", function(req,res) {
 
-  res.render("links", req.body);
+
+app.get("/:id", function(req,res) {
+  var id= req.params.id;
+  db.link.find({where: {hash: id}}).then(function(taco){
+    console.log(taco.hash + "aaaaaaaaaaaaaaaaa")
+    res.redirect(taco.dataValues.url)
+  })
+
 });
 
 
@@ -45,7 +60,7 @@ app.get("/links/:id", function(req,res) {
 // console.log(numbers);
 
 
-
+// req.headers.host
 
 
 
